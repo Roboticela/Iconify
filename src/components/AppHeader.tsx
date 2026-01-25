@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme, type ThemeName } from "../contexts/ThemeContext";
+import { usePlatform } from "../contexts/PlatformContext";
 import StoryModal from "../components/StoryModal";
 import AboutModal from "../components/AboutModal";
 import LicenseModal from "../components/LicenseModal";
@@ -111,7 +112,7 @@ const platforms: Platform[] = [
 
 export default function AppHeader() {
   const { theme, setTheme } = useTheme();
-  const [selectedPlatform, setSelectedPlatform] = useState<string>("tauri");
+  const { selectedPlatform, setSelectedPlatform } = usePlatform();
   const [storyModalOpen, setStoryModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
