@@ -185,7 +185,7 @@ export function DropdownMenuItem({
   const subContext = React.useContext(DropdownMenuSubContext);
   const itemRef = React.useRef<HTMLDivElement>(null);
   const [submenuOpen, setSubmenuOpen] = React.useState(false);
-  const closeTimeoutRef = React.useRef<number | null>(null);
+  const closeTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Check if children contain DropdownMenuSub - use a more reliable method
   const childrenArray = React.Children.toArray(children);
@@ -600,7 +600,7 @@ export function DropdownMenuSubContent({
   open,
   onMouseEnter: onMouseEnterProp,
   onMouseLeave: onMouseLeaveProp,
-  menuItemClickedRef,
+  menuItemClickedRef: _menuItemClickedRef,
 }: {
   children: React.ReactNode;
   className?: string;

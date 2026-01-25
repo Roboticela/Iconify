@@ -127,7 +127,6 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
   const [storyModalOpen, setStoryModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
-  const [visibleButtons, setVisibleButtons] = useState<string[]>([]);
   const [menuButtons, setMenuButtons] = useState<string[]>([]);
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -358,7 +357,6 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
 
     // If all buttons fit, show them all
     if (totalButtonsWidth <= availableWidth) {
-      setVisibleButtons(allButtonIds);
       setMenuButtons([]);
       return;
     }
@@ -383,7 +381,6 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
       }
     });
 
-    setVisibleButtons(newVisibleButtons);
     setMenuButtons(newMenuButtons);
   }, [allButtonIds]);
 
