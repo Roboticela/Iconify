@@ -41,6 +41,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "../lib/utils";
+import { downloadIconsAsZip } from "../lib/downloadHandler";
 
 const themes: { name: ThemeName; label: string; colors: string }[] = [
   { name: "navy", label: "Navy", colors: "bg-blue-900" },
@@ -122,12 +123,14 @@ interface AppHeaderProps {
 export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { selectedPlatform, setSelectedPlatform } = usePlatform();
-  const { setBackgroundColor, setScale, setPositionX, setPositionY, setBorderRoundness } = useImageSettings();
+  const { backgroundColor, scale, positionX, positionY, borderRoundness, setBackgroundColor, setScale, setPositionX, setPositionY, setBorderRoundness } = useImageSettings();
   const [storyModalOpen, setStoryModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [visibleButtons, setVisibleButtons] = useState<string[]>([]);
   const [menuButtons, setMenuButtons] = useState<string[]>([]);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const headerRef = useRef<HTMLElement>(null);
   const buttonsContainerRef = useRef<HTMLDivElement>(null);
@@ -152,14 +155,46 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
             variant="outline" 
             size="sm" 
             className="gap-2 rounded-xl h-10 px-4 whitespace-nowrap"
-            disabled={!selectedImage}
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download clicked");
+            disabled={!selectedImage || isDownloading}
+            onClick={async () => {
+              if (!selectedImage) return;
+              
+              setIsDownloading(true);
+              setDownloadProgress(0);
+              
+              try {
+                await downloadIconsAsZip({
+                  sourceImage: selectedImage,
+                  platformId: selectedPlatform,
+                  settings: {
+                    backgroundColor,
+                    scale,
+                    positionX,
+                    positionY,
+                    borderRoundness,
+                  },
+                  onProgress: (progress) => {
+                    setDownloadProgress(progress);
+                  },
+                });
+              } catch (error) {
+                console.error('Download failed:', error);
+                alert('Failed to download icons. Please try again.');
+              } finally {
+                setIsDownloading(false);
+                setDownloadProgress(null);
+              }
             }}
           >
             <Download className="w-4 h-4" />
-            <span className="hidden lg:inline">Download</span>
+            <span className="hidden lg:inline">
+              {isDownloading 
+                ? downloadProgress !== null 
+                  ? `Downloading... ${Math.round(downloadProgress)}%`
+                  : 'Preparing...'
+                : 'Download'
+              }
+            </span>
           </Button>
         </motion.div>
       ),
