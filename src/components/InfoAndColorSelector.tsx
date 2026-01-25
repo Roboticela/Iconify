@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Info, Palette, Smartphone, Globe, Monitor, Laptop, ZoomIn, Move, CornerDownRight } from "lucide-react";
+import { Info, Palette, Smartphone, Globe, Monitor, Laptop, ZoomIn, Move, CornerDownRight, RotateCcw } from "lucide-react";
 import { usePlatform } from "../contexts/PlatformContext";
 import { useImageSettings } from "../contexts/ImageSettingsContext";
+import { useTheme, type ThemeName } from "../contexts/ThemeContext";
+import ThemeColorPicker from "./ThemeColorPicker";
 
 interface InfoAndColorSelectorProps {
   selectedImage?: string | null;
@@ -21,6 +23,78 @@ interface ControlBarProps {
 }
 
 const ControlBar = ({ label, icon, value, onChange, min = 0, max = 100, unit = "%" }: ControlBarProps) => {
+  const [inputValue, setInputValue] = useState<string>(value.toString());
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputWidth, setInputWidth] = useState<number>(40);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const maxMeasureRef = useRef<HTMLSpanElement>(null);
+
+  // Update input value when prop value changes (but not while editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setInputValue(value.toString());
+    }
+  }, [value, isEditing]);
+
+  // Measure text width and update input width
+  useEffect(() => {
+    // Use setTimeout to ensure DOM is fully updated
+    const timeoutId = setTimeout(() => {
+      if (measureRef.current && maxMeasureRef.current) {
+        // Use scrollWidth for more accurate text measurement
+        const currentWidth = measureRef.current.scrollWidth || measureRef.current.offsetWidth;
+        const maxWidth = maxMeasureRef.current.scrollWidth || maxMeasureRef.current.offsetWidth;
+        
+        // Min width for small values, max width for "9999"
+        const minWidth = 40;
+        // Padding: px-2 (8px left) + pr-6 (24px right for unit) = 32px total
+        const leftPadding = 8; // px-2
+        const rightPadding = 24; // pr-6 for unit space
+        const totalPadding = leftPadding + rightPadding;
+        
+        // Add extra width per character for better spacing
+        const charCount = (inputValue || "0").length;
+        const extraPerChar = 2; // Extra pixels per character
+        
+        // Calculate width: text width + padding + extra per character, capped at max width
+        const calculatedWidth = currentWidth + totalPadding + (charCount * extraPerChar);
+        const maxCalculatedWidth = maxWidth + totalPadding + (4 * extraPerChar); // 4 chars for "9999"
+        
+        setInputWidth(Math.max(minWidth, Math.min(maxCalculatedWidth, calculatedWidth)));
+      }
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [inputValue, unit]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+  };
+
+  const handleInputBlur = () => {
+    setIsEditing(false);
+    const numValue = parseFloat(inputValue);
+    if (!isNaN(numValue)) {
+      // Allow values beyond min/max for flexibility
+      onChange(numValue);
+      setInputValue(numValue.toString());
+    } else {
+      // Reset to current value if invalid
+      setInputValue(value.toString());
+    }
+  };
+
+  const handleInputFocus = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -37,23 +111,62 @@ const ControlBar = ({ label, icon, value, onChange, min = 0, max = 100, unit = "
         {icon}
       </motion.div>
       <div className="flex-1 flex flex-col gap-1 min-w-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <span className="text-[9px] sm:text-[10px] text-foreground font-medium">{label}</span>
-          <motion.span
-            key={value}
-            initial={{ scale: 1.2 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="text-[9px] sm:text-[10px] text-foreground"
-          >
-            {value}{unit}
-          </motion.span>
+          <div className="relative flex items-center">
+            {/* Hidden spans to measure text width */}
+            <span
+              ref={measureRef}
+              className="text-[9px] sm:text-[10px] absolute whitespace-pre"
+              style={{ 
+                position: "absolute",
+                visibility: "hidden",
+                top: "-9999px",
+                left: "-9999px",
+                display: "inline-block",
+                whiteSpace: "pre",
+              }}
+            >
+              {inputValue || "0"}
+            </span>
+            <span
+              ref={maxMeasureRef}
+              className="text-[9px] sm:text-[10px] absolute whitespace-pre"
+              style={{ 
+                position: "absolute",
+                visibility: "hidden",
+                top: "-9999px",
+                left: "-9999px",
+                display: "inline-block",
+                whiteSpace: "pre",
+              }}
+            >
+              9999
+            </span>
+            <input
+              type="number"
+              value={inputValue}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onFocus={handleInputFocus}
+              onKeyDown={handleInputKeyDown}
+              step={unit === "%" ? 1 : 0.1}
+              className="text-[9px] sm:text-[10px] text-foreground bg-background/50 border border-border/40 rounded px-2 py-0.5 pr-6 text-right leading-none focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              style={{ 
+                WebkitAppearance: "textfield",
+                MozAppearance: "textfield",
+                width: `${inputWidth}px`,
+                minWidth: "40px",
+              }}
+            />
+            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-foreground/60 pointer-events-none leading-none">{unit}</span>
+          </div>
         </div>
         <div className="relative h-2 bg-background border border-border/40 rounded-full overflow-visible w-full min-w-0">
           <motion.div
             className="absolute left-0 top-0 h-full bg-primary rounded-full"
             initial={{ width: 0 }}
-            animate={{ width: `${((value - min) / (max - min)) * 100}%` }}
+            animate={{ width: `${Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100))}%` }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           />
           <motion.div
@@ -64,7 +177,7 @@ const ControlBar = ({ label, icon, value, onChange, min = 0, max = 100, unit = "
               transformOrigin: "center",
             }}
             animate={{
-              left: `calc(${((value - min) / (max - min)) * 100}% - 6px)`,
+              left: `calc(${Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100))}% - 6px)`,
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             whileHover={{ scale: 1.1 }}
@@ -73,7 +186,7 @@ const ControlBar = ({ label, icon, value, onChange, min = 0, max = 100, unit = "
             type="range"
             min={min}
             max={max}
-            value={value}
+            value={Math.max(min, Math.min(max, value))}
             onChange={(e) => onChange(Number(e.target.value))}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             style={{
@@ -326,13 +439,30 @@ const mapPlatformIdToName = (platformId: string): string => {
   return platformMap[platformId] || "iOS"; // Default to iOS if not mapped
 };
 
+// Get theme-appropriate default background color
+const getThemeDefaultColor = (theme: ThemeName): string => {
+  const themeColors: Record<ThemeName, string> = {
+    navy: "#1e293b", // card color from navy theme
+    dark: "#1a1a1a", // card color from dark theme
+    light: "#ffffff", // white for light theme
+    sunset: "#fff7ed", // foreground color from sunset theme (light)
+    ocean: "#e0f2fe", // foreground color from ocean theme (light)
+    forest: "#f0fdf4", // foreground color from forest theme (light)
+    purple: "#faf5ff", // foreground color from purple theme (light)
+    midnight: "#e0e7ff", // foreground color from midnight theme (light)
+  };
+  return themeColors[theme] || "#ffffff";
+};
+
 export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSelectorProps) {
   const { selectedPlatform: platformId } = usePlatform();
+  const { theme } = useTheme();
   const { backgroundColor, setBackgroundColor, scale, setScale, positionX, setPositionX, positionY, setPositionY, borderRoundness, setBorderRoundness } = useImageSettings();
   const [dimensions, setDimensions] = useState<string>("N/A");
   const [showTransparent, setShowTransparent] = useState(backgroundColor === "transparent");
   
   const selectedPlatform = useMemo(() => mapPlatformIdToName(platformId), [platformId]);
+  const themeDefaultColor = useMemo(() => getThemeDefaultColor(theme), [theme]);
 
   useEffect(() => {
     setShowTransparent(backgroundColor === "transparent");
@@ -371,10 +501,29 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
       <div className="flex-1 space-y-4 min-h-0 min-w-0 overflow-x-hidden w-full">
         {/* Image Controls Section */}
         <div>
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-            <Palette className="w-4 h-4" />
-            Image Controls
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Palette className="w-4 h-4" />
+              Image Controls
+            </h3>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setBackgroundColor(themeDefaultColor);
+                setScale(100);
+                setPositionX(50);
+                setPositionY(50);
+                setBorderRoundness(0);
+                setShowTransparent(false);
+              }}
+              className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-foreground/70 hover:text-foreground bg-accent/20 hover:bg-accent/30 border border-border/40 rounded-md transition-colors"
+              title="Reset all settings to default"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span className="hidden sm:inline">Reset</span>
+            </motion.button>
+          </div>
           
           {/* Background Color Picker */}
           <motion.div
@@ -390,24 +539,17 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <input
-                    type="color"
-                    value={showTransparent ? "#ffffff" : (backgroundColor === "transparent" ? "#ffffff" : backgroundColor)}
-                    onChange={(e) => {
-                      setBackgroundColor(e.target.value);
+                  <ThemeColorPicker
+                    value={showTransparent ? themeDefaultColor : (backgroundColor === "transparent" ? themeDefaultColor : backgroundColor)}
+                    onChange={(color) => {
+                      setBackgroundColor(color);
                       setShowTransparent(false);
                     }}
                     disabled={showTransparent}
-                    className="w-10 h-10 rounded-lg border-2 border-border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ 
-                      appearance: "none",
-                      WebkitAppearance: "none",
-                      MozAppearance: "none",
-                    }}
                   />
                   {showTransparent && (
                     <div 
-                      className="absolute inset-0 rounded-lg pointer-events-none"
+                      className="absolute inset-0 rounded-lg pointer-events-none z-10"
                       style={{
                         backgroundImage: `linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)`,
                         backgroundSize: "8px 8px",
@@ -431,7 +573,7 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
                       }
                     }}
                     className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder="#ffffff"
+                    placeholder={themeDefaultColor}
                   />
                 </div>
               </div>
@@ -490,7 +632,7 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
               value={scale}
               onChange={setScale}
               min={10}
-              max={200}
+              max={500}
             />
             <ControlBar
               label="Position X"

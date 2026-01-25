@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Upload, Image as ImageIcon, X } from "lucide-react";
 
@@ -13,6 +13,14 @@ export default function ImageSelector({ selectedImage, onImageSelect }: ImageSel
   const [preview, setPreview] = useState<string | null>(selectedImage || null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync preview state with selectedImage prop
+  useEffect(() => {
+    setPreview(selectedImage || null);
+    if (!selectedImage && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [selectedImage]);
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith("image/")) {

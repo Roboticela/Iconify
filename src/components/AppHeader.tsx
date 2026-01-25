@@ -2,6 +2,7 @@
 
 import { useTheme, type ThemeName } from "../contexts/ThemeContext";
 import { usePlatform } from "../contexts/PlatformContext";
+import { useImageSettings } from "../contexts/ImageSettingsContext";
 import StoryModal from "../components/StoryModal";
 import AboutModal from "../components/AboutModal";
 import LicenseModal from "../components/LicenseModal";
@@ -23,7 +24,8 @@ import {
   Coffee,
   Layers,
   Puzzle,
-  Gamepad2
+  Gamepad2,
+  RotateCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
@@ -110,9 +112,14 @@ const platforms: Platform[] = [
   { id: "web-pwa", label: "Web / PWA", icon: <Globe className="w-4 h-4" /> },
 ].sort((a, b) => a.label.localeCompare(b.label));
 
-export default function AppHeader() {
+interface AppHeaderProps {
+  onResetImage?: () => void;
+}
+
+export default function AppHeader({ onResetImage }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { selectedPlatform, setSelectedPlatform } = usePlatform();
+  const { setBackgroundColor, setScale, setPositionX, setPositionY, setBorderRoundness } = useImageSettings();
   const [storyModalOpen, setStoryModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
@@ -213,10 +220,40 @@ export default function AppHeader() {
         </DropdownMenu>
       ),
     },
+    {
+      id: "reset",
+      type: "button",
+      label: "Reset All",
+      icon: <RotateCcw className="w-4 h-4" />,
+      component: (
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 rounded-xl h-10 px-4 whitespace-nowrap"
+            onClick={() => {
+              // Reset image
+              onResetImage?.();
+              // Reset platform to default
+              setSelectedPlatform("tauri");
+              // Reset all image settings
+              setBackgroundColor("#ffffff");
+              setScale(100);
+              setPositionX(50);
+              setPositionY(50);
+              setBorderRoundness(0);
+            }}
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span className="hidden lg:inline">Reset All</span>
+          </Button>
+        </motion.div>
+      ),
+    },
   ];
 
   const allButtonIds = useMemo(() => 
-    ["platform", "theme"],
+    ["platform", "theme", "reset"],
     []
   );
 

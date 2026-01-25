@@ -9,7 +9,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto custom-scrollbar">
-      <AppHeader />
+      <AppHeader onResetImage={() => setSelectedImage(null)} />
       <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 p-2 sm:p-4 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] overflow-x-hidden overflow-y-hidden">
         {/* Left Side - Two Containers */}
         <div className="flex-[0.2] flex flex-col gap-2 sm:gap-4 min-w-0 max-w-[290px] h-full overflow-y-auto custom-scrollbar min-h-0 pr-2">
