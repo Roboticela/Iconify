@@ -322,7 +322,7 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="h-full w-full bg-card/40 backdrop-blur-md rounded-xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col p-4 max-h-full"
+      className="h-full min-h-[400px] lg:min-h-0 w-full bg-card/40 backdrop-blur-md rounded-xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col p-4 max-h-full"
     >
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
