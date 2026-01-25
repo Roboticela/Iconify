@@ -443,6 +443,7 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
     'tauri': [
       { width: 32, height: 32, filename: '32x32.png', format: 'png' },
       { width: 128, height: 128, filename: '128x128.png', format: 'png' },
+      { width: 256, height: 256, filename: '128x128@2x.png', format: 'png' },
       { width: 256, height: 256, filename: '256x256.png', format: 'png' },
       { width: 512, height: 512, filename: '512x512.png', format: 'png' },
       { width: 512, height: 512, filename: 'icon.png', format: 'png' },
