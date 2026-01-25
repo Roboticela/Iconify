@@ -656,7 +656,7 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
               value={borderRoundness}
               onChange={setBorderRoundness}
               min={0}
-              max={50}
+              max={100}
               unit="px"
             />
           </motion.div>

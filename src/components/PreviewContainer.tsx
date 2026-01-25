@@ -320,7 +320,6 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
             >
               {allDimensions.map((dimension, index) => {
                 const [width, height] = dimension.split("×").map(d => parseInt(d.trim()));
-                const aspectRatio = width / height;
                 const maxPreviewSize = 120; // Maximum preview size in pixels
                 const previewSize = Math.min(maxPreviewSize, Math.max(width, height));
                 
@@ -334,7 +333,7 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
                     style={{ minWidth: 0, minHeight: 0, maxWidth: "none" }}
                   >
                     <div
-                      className="flex items-center justify-center rounded-lg border border-border/50 overflow-hidden relative"
+                      className="flex items-center justify-center border border-border/50 overflow-hidden relative"
                       style={{
                         width: `${previewSize}px`,
                         height: `${previewSize}px`,
@@ -342,6 +341,7 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
                         minHeight: `${previewSize}px`,
                         maxWidth: "none",
                         maxHeight: "none",
+                        borderRadius: `${borderRoundness}px`,
                         backgroundColor: backgroundColor === "transparent" 
                           ? "transparent" 
                           : backgroundColor,
