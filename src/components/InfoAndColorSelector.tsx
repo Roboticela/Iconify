@@ -498,7 +498,7 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="h-full w-full max-w-full bg-card/40 backdrop-blur-md rounded-xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col p-4 min-w-0"
     >
-      <div className="flex-1 space-y-4 min-h-0 min-w-0 overflow-x-hidden w-full">
+      <div className="flex-1 space-y-4 min-h-0 min-w-0 overflow-hidden w-full">
         {/* Image Controls Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
