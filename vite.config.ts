@@ -28,22 +28,4 @@ export default defineConfig({
       util: 'util',
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Split React and React DOM into separate chunk
-          'react-vendor': ['react', 'react-dom'],
-          // Split animation library
-          'framer-motion': ['framer-motion'],
-          // Split icon generation libraries
-          'icon-libs': ['@fiahfy/icns', 'jszip'],
-          // Split UI libraries
-          'ui-libs': ['lucide-react', 'react-colorful'],
-        },
-      },
-    },
-    // Increase chunk size warning limit if you want to suppress the warning
-    // chunkSizeWarningLimit: 1000,
-  },
 })
