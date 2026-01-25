@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Maximize2, X } from "lucide-react";
+import { Eye, Maximize2, X, ImageIcon } from "lucide-react";
 import { usePlatform } from "../contexts/PlatformContext";
 import { useImageSettings } from "../contexts/ImageSettingsContext";
 import { useMemo, useState } from "react";
@@ -341,12 +341,26 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
           {!selectedImage ? (
             <motion.div
               key="no-image"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center h-full text-foreground/50 text-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center h-full gap-4"
             >
-              Select an image to see previews
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+                <div className="relative bg-gradient-to-br from-primary/20 to-accent/20 p-6 rounded-2xl border border-border/50 backdrop-blur-sm">
+                  <ImageIcon className="w-16 h-16 text-primary/60 mx-auto" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <h4 className="text-base font-semibold text-foreground">
+                  Select an Image
+                </h4>
+                <p className="text-sm text-foreground/60 max-w-sm">
+                  Choose an image from the left panel to see previews across different device sizes and platforms
+                </p>
+              </div>
             </motion.div>
           ) : allDimensions.length === 0 ? (
             <motion.div

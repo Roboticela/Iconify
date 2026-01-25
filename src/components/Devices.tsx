@@ -56,6 +56,9 @@ function IOSDevice({ className = "" }: DeviceComponentProps) {
           height="652.34"
           clipPath="url(#iosScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -222,6 +225,9 @@ function AndroidDevice({ className = "" }: DeviceComponentProps) {
           height="578.82"
           clipPath="url(#androidScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -324,6 +330,9 @@ function WatchDevice({ className = "" }: DeviceComponentProps) {
           height="291"
           clipPath="url(#watchScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -454,6 +463,9 @@ function MacOSDevice({ className = "" }: DeviceComponentProps) {
           height="253.99"
           clipPath="url(#macosScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -599,6 +611,9 @@ function TabletDevice({ className = "" }: DeviceComponentProps) {
           height="347.64"
           clipPath="url(#tabletScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -681,6 +696,9 @@ function WindowsDevice({ className = "" }: DeviceComponentProps) {
           height="276.72"
           clipPath="url(#windowsScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -753,6 +771,9 @@ function WindowsLaptopDevice({ className = "" }: DeviceComponentProps) {
           height="240"
           clipPath="url(#windowsLaptopScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -818,6 +839,9 @@ function TVDevice({ className = "" }: DeviceComponentProps) {
           height="264.87"
           clipPath="url(#tvScreenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}
@@ -883,6 +907,9 @@ function IMacDevice({ className = "" }: DeviceComponentProps) {
           height="289.41"
           clipPath="url(#screenClip)"
         >
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-base font-medium text-foreground/40">Coming Soon</span>
+          </div>
         </foreignObject>
 
         {/* Clip path for screen area */}

@@ -25,7 +25,9 @@ import {
   Layers,
   Puzzle,
   Gamepad2,
-  RotateCcw
+  RotateCcw,
+  Download,
+  HelpCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
@@ -113,10 +115,11 @@ const platforms: Platform[] = [
 ].sort((a, b) => a.label.localeCompare(b.label));
 
 interface AppHeaderProps {
+  selectedImage?: string | null;
   onResetImage?: () => void;
 }
 
-export default function AppHeader({ onResetImage }: AppHeaderProps) {
+export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { selectedPlatform, setSelectedPlatform } = usePlatform();
   const { setBackgroundColor, setScale, setPositionX, setPositionY, setBorderRoundness } = useImageSettings();
@@ -138,6 +141,29 @@ export default function AppHeader({ onResetImage }: AppHeaderProps) {
   const iconColors = useMemo(() => getThemeGradientColors(theme), [theme]);
 
   const allButtons: HeaderButton[] = [
+    {
+      id: "download",
+      type: "button",
+      label: "Download",
+      icon: <Download className="w-4 h-4" />,
+      component: (
+        <motion.div whileHover={selectedImage ? { scale: 1.02 } : {}} whileTap={selectedImage ? { scale: 0.98 } : {}} transition={{ duration: 0.2 }}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 rounded-xl h-10 px-4 whitespace-nowrap"
+            disabled={!selectedImage}
+            onClick={() => {
+              // TODO: Implement download functionality
+              console.log("Download clicked");
+            }}
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden lg:inline">Download</span>
+          </Button>
+        </motion.div>
+      ),
+    },
     {
       id: "platform",
       type: "dropdown",
@@ -253,7 +279,7 @@ export default function AppHeader({ onResetImage }: AppHeaderProps) {
   ];
 
   const allButtonIds = useMemo(() => 
-    ["platform", "theme", "reset"],
+    ["download", "platform", "theme", "reset"],
     []
   );
 
@@ -631,6 +657,25 @@ export default function AppHeader({ onResetImage }: AppHeaderProps) {
                   <span>License</span>
                 </DropdownMenuItem>
               </motion.div>
+              <motion.div
+                key="support"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+              >
+                <DropdownMenuItem 
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => {
+                    const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
+                    const supportUrl = `${siteUrl}/support`;
+                    window.open(supportUrl, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  <span>Support</span>
+                </DropdownMenuItem>
+              </motion.div>
             </AnimatePresence>
             <div className="h-px bg-border my-1" />
             <AnimatePresence>
@@ -644,7 +689,7 @@ export default function AppHeader({ onResetImage }: AppHeaderProps) {
                 <DropdownMenuItem 
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => {
-                    const siteUrl = import.meta.env.VITE_SITE_URL || '';
+                    const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
                     const privacyUrl = `${siteUrl}/privacy`;
                     window.open(privacyUrl, '_blank', 'noopener,noreferrer');
                   }}
@@ -663,7 +708,7 @@ export default function AppHeader({ onResetImage }: AppHeaderProps) {
                 <DropdownMenuItem 
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => {
-                    const siteUrl = import.meta.env.VITE_SITE_URL || '';
+                    const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
                     const termsUrl = `${siteUrl}/terms`;
                     window.open(termsUrl, '_blank', 'noopener,noreferrer');
                   }}
