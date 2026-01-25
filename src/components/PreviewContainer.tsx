@@ -1,10 +1,11 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye } from "lucide-react";
+import { Eye, Maximize2, X } from "lucide-react";
 import { usePlatform } from "../contexts/PlatformContext";
 import { useImageSettings } from "../contexts/ImageSettingsContext";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Devices from "./Devices";
 
 interface PreviewContainerProps {
   selectedImage?: string | null;
@@ -243,9 +244,36 @@ const platformInfo: Platform[] = [
   }
 ];
 
+// Device ordering: mobile devices, laptops, desktop displays, then TV
+const deviceOrder: Record<string, number> = {
+  "ios": 1,          // Mobile device 1 (iOS phone)
+  "android": 2,      // Mobile device 2 (Android phone)
+  "watch": 3,        // Watch
+  "tablet": 4,       // Tablet
+  "windowslaptop": 5, // Laptop 1
+  "macos": 6,        // Laptop 2
+  "imac": 7,         // Desktop display 1
+  "windows": 8,      // Desktop display 2
+  "tv": 9,           // TV
+};
+
+// Device type to label mapping
+const deviceLabels: Record<string, string> = {
+  "ios": "iPhone",
+  "android": "Android Phone",
+  "watch": "Apple Watch",
+  "tablet": "iPad",
+  "windowslaptop": "Windows Laptop",
+  "macos": "MacBook",
+  "imac": "iMac",
+  "windows": "Windows Desktop",
+  "tv": "TV",
+};
+
 export default function PreviewContainer({ selectedImage }: PreviewContainerProps) {
   const { selectedPlatform: platformId } = usePlatform();
   const { backgroundColor, scale, positionX, positionY, borderRoundness } = useImageSettings();
+  const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
   
   const selectedPlatform = useMemo(() => mapPlatformIdToName(platformId), [platformId]);
   
@@ -265,6 +293,27 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
       const aSize = aWidth * aHeight;
       const bSize = bWidth * bHeight;
       return aSize - bSize;
+    });
+  }, [selectedPlatform]);
+
+  // Map platform to relevant device types
+  const getDevicesForPlatform = useMemo(() => {
+    const deviceMap: Record<string, Array<"ios" | "android" | "tablet" | "watch" | "tv" | "macos" | "imac" | "windows" | "windowslaptop">> = {
+      "iOS": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "Android": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "Web": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "Windows": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "macOS": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "Tauri": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+      "Electron": ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"],
+    };
+    const devices = deviceMap[selectedPlatform] || ["ios", "android", "watch", "tablet", "windowslaptop", "macos", "imac", "windows", "tv"];
+    
+    // Sort devices according to the specified order
+    return devices.sort((a, b) => {
+      const orderA = deviceOrder[a] || 999;
+      const orderB = deviceOrder[b] || 999;
+      return orderA - orderB;
     });
   }, [selectedPlatform]);
 
@@ -310,73 +359,147 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
               No platform information available
             </motion.div>
           ) : (
-            <motion.div
-              key={selectedPlatform}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-            >
-              {allDimensions.map((dimension, index) => {
-                const [width, height] = dimension.split("×").map(d => parseInt(d.trim()));
-                const maxPreviewSize = 120; // Maximum preview size in pixels
-                const previewSize = Math.min(maxPreviewSize, Math.max(width, height));
-                
-                return (
-                  <motion.div
-                    key={dimension}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.03 }}
-                    className="flex flex-col items-center gap-2"
-                    style={{ minWidth: 0, minHeight: 0, maxWidth: "none" }}
-                  >
-                    <div
-                      className="flex items-center justify-center border border-border/50 overflow-hidden relative"
-                      style={{
-                        width: `${previewSize}px`,
-                        height: `${previewSize}px`,
-                        minWidth: `${previewSize}px`,
-                        minHeight: `${previewSize}px`,
-                        maxWidth: "none",
-                        maxHeight: "none",
-                        borderRadius: `${borderRoundness}px`,
-                        backgroundColor: backgroundColor === "transparent" 
-                          ? "transparent" 
-                          : backgroundColor,
-                        backgroundImage: backgroundColor === "transparent"
-                          ? `linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)`
-                          : undefined,
-                        backgroundSize: "8px 8px",
-                        backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
-                      }}
+            <>
+              <motion.div
+                key={selectedPlatform}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8"
+              >
+                {allDimensions.map((dimension, index) => {
+                  const [width, height] = dimension.split("×").map(d => parseInt(d.trim()));
+                  const maxPreviewSize = 120; // Maximum preview size in pixels
+                  const previewSize = Math.min(maxPreviewSize, Math.max(width, height));
+                  
+                  return (
+                    <motion.div
+                      key={dimension}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      className="flex flex-col items-center gap-2"
+                      style={{ minWidth: 0, minHeight: 0, maxWidth: "none" }}
                     >
-                      <img
-                        src={selectedImage!}
-                        alt={`Icon ${dimension}`}
+                      <div
+                        className="flex items-center justify-center border border-border/50 overflow-hidden relative"
                         style={{
-                          width: `${previewSize * (scale / 100)}px`,
-                          height: `${previewSize * (scale / 100)}px`,
+                          width: `${previewSize}px`,
+                          height: `${previewSize}px`,
+                          minWidth: `${previewSize}px`,
+                          minHeight: `${previewSize}px`,
                           maxWidth: "none",
                           maxHeight: "none",
-                          objectFit: "contain",
                           borderRadius: `${borderRoundness}px`,
-                          transform: `translate(calc(-50% + ${(positionX - 50) * previewSize / 100}px), calc(-50% + ${(positionY - 50) * previewSize / 100}px))`,
-                          transformOrigin: "center",
-                          position: "absolute",
-                          left: "50%",
-                          top: "50%",
+                          backgroundColor: backgroundColor === "transparent" 
+                            ? "transparent" 
+                            : backgroundColor,
+                          backgroundImage: backgroundColor === "transparent"
+                            ? `linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)`
+                            : undefined,
+                          backgroundSize: "8px 8px",
+                          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
                         }}
-                      />
+                      >
+                        <img
+                          src={selectedImage!}
+                          alt={`Icon ${dimension}`}
+                          style={{
+                            width: `${previewSize * (scale / 100)}px`,
+                            height: `${previewSize * (scale / 100)}px`,
+                            maxWidth: "none",
+                            maxHeight: "none",
+                            objectFit: "contain",
+                            borderRadius: `${borderRoundness}px`,
+                            transform: `translate(calc(-50% + ${(positionX - 50) * previewSize / 100}px), calc(-50% + ${(positionY - 50) * previewSize / 100}px))`,
+                            transformOrigin: "center",
+                            position: "absolute",
+                            left: "50%",
+                            top: "50%",
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground/80 text-center">
+                        {dimension}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Devices Section */}
+              {selectedImage && getDevicesForPlatform.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="mt-8 pt-8 border-t border-border/50"
+                >
+                  <h4 className="text-sm font-semibold text-foreground mb-4">Device Previews</h4>
+                  
+                  {expandedDevice ? (
+                    // Expanded device view
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="relative w-full flex flex-col items-center justify-center min-h-[400px] bg-accent/5 rounded-lg border border-border/50 p-8"
+                    >
+                      <button
+                        onClick={() => setExpandedDevice(null)}
+                        className="absolute top-4 right-4 p-2 rounded-lg bg-background/80 hover:bg-background border border-border/50 transition-colors"
+                        aria-label="Close expanded view"
+                      >
+                        <X className="w-4 h-4 text-foreground" />
+                      </button>
+                      <div className="w-full max-w-[400px] h-auto mb-4">
+                        <Devices
+                          selectedImage={null}
+                          deviceType={expandedDevice as any}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">
+                        {deviceLabels[expandedDevice] || expandedDevice}
+                      </span>
+                    </motion.div>
+                  ) : (
+                    // Grid view of all devices
+                    <div className="grid grid-cols-3 gap-6">
+                      {getDevicesForPlatform.map((deviceType, index) => (
+                        <motion.div
+                          key={deviceType}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                          className="flex flex-col items-center gap-2 relative group"
+                        >
+                          <div className="w-full max-w-[200px] h-auto relative">
+                            <Devices
+                              selectedImage={null}
+                              deviceType={deviceType}
+                              className="w-full h-auto"
+                            />
+                            <button
+                              onClick={() => setExpandedDevice(deviceType)}
+                              className="absolute top-2 right-2 p-1.5 rounded-md bg-background/90 hover:bg-background border border-border/50 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                              aria-label={`Expand ${deviceLabels[deviceType] || deviceType}`}
+                            >
+                              <Maximize2 className="w-3.5 h-3.5 text-foreground" />
+                            </button>
+                          </div>
+                          <span className="text-xs font-medium text-foreground/80 text-center">
+                            {deviceLabels[deviceType] || deviceType}
+                          </span>
+                        </motion.div>
+                      ))}
                     </div>
-                    <span className="text-[10px] font-medium text-foreground/80 text-center">
-                      {dimension}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </>
           )}
         </AnimatePresence>
       </div>

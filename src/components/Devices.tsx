@@ -5,11 +5,68 @@ import { useImageSettings } from "../contexts/ImageSettingsContext";
 interface DevicesProps {
   selectedImage?: string | null;
   className?: string;
-  deviceType?: "imac" | "windows" | "tablet" | "android" | "watch" | "macos" | "windowslaptop" | "tv";
+  deviceType?: "imac" | "windows" | "tablet" | "android" | "ios" | "watch" | "macos" | "windowslaptop" | "tv";
 }
 
 interface DeviceComponentProps {
   className?: string;
+}
+
+function IOSDevice({ className = "" }: DeviceComponentProps) {
+  return (
+    <div className={`relative ${className}`}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 326.3 675.02"
+        className="w-full h-full"
+      >
+        <g fill="currentColor" stroke="currentColor" strokeMiterlimit="10" className="fill-primary stroke-primary">
+          {/* Side buttons */}
+          <line x1="324.8" y1="210.43" x2="324.8" y2="290.13" strokeWidth="3" strokeLinecap="round" />
+          <line x1="1.5" y1="138.86" x2="1.5" y2="169.44" strokeWidth="3" strokeLinecap="round" />
+          <line x1="1.5" y1="192.97" x2="1.5" y2="242.63" strokeWidth="3" strokeLinecap="round" />
+          <line x1="1.5" y1="257.05" x2="1.5" y2="307.69" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Outer body */}
+          <rect x="2.31" y=".5" width="321.83" height="674.02" rx="56.77" ry="56.77" className="fill-tertiary stroke-tertiary" />
+
+          {/* Inner frame */}
+          <rect x="7.23" y="5.09" width="312.58" height="665.35" rx="52.34" ry="52.34" className="fill-primary stroke-primary" />
+
+          {/* Screen */}
+          <rect x="12.72" y="11.74" width="300.14" height="652.34" rx="44.24" ry="44.24" fill="none" className="fill-background stroke-primary" />
+
+          {/* Speaker */}
+          <rect x="115.95" y="21.21" width="93.9" height="28.08" rx="14.04" ry="14.04" className="fill-primary stroke-primary" />
+
+          {/* Camera (outer) */}
+          <circle cx="195.45" cy="35.25" r="5.24" className="fill-primary stroke-tertiary" strokeWidth="0.5" strokeMiterlimit="10" />
+          {/* Camera (inner) */}
+          <circle cx="195.45" cy="35.25" r="3.25" className="fill-tertiary stroke-tertiary" strokeWidth="0.5" strokeMiterlimit="10" />
+
+          {/* Sensor */}
+          <circle cx="127.73" cy="35.25" r=".73" className="fill-tertiary stroke-tertiary" />
+        </g>
+
+        {/* Image container within screen */}
+        <foreignObject
+          x="12.72"
+          y="11.74"
+          width="300.14"
+          height="652.34"
+          clipPath="url(#iosScreenClip)"
+        >
+        </foreignObject>
+
+        {/* Clip path for screen area */}
+        <defs>
+          <clipPath id="iosScreenClip">
+            <rect x="12.72" y="11.74" width="300.14" height="652.34" rx="44.24" ry="44.24" />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  );
 }
 
 function AndroidDevice({ className = "" }: DeviceComponentProps) {
@@ -841,6 +898,10 @@ function IMacDevice({ className = "" }: DeviceComponentProps) {
 
 export default function Devices({ selectedImage: _selectedImage, className = "", deviceType = "imac" }: DevicesProps) {
   useImageSettings(); // Keep hook call for potential future use
+
+  if (deviceType === "ios") {
+    return <IOSDevice className={className} />;
+  }
 
   if (deviceType === "android") {
     return <AndroidDevice className={className} />;
