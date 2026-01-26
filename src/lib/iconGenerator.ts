@@ -255,6 +255,84 @@ export async function generateICNS(
 }
 
 /**
+ * Generate an ICO file with multiple icon sizes
+ * ICO files can contain multiple resolutions in a single file
+ * Modern ICO files use PNG encoding for better compression
+ */
+export async function generateICO(
+  sourceImage: string,
+  sizes: Array<{ width: number; height: number }>,
+  settings: IconGenerationSettings
+): Promise<Blob> {
+  // Generate PNG images for each size
+  const iconPromises = sizes.map(async ({ width, height }) => {
+    const pngBlob = await generateIcon(sourceImage, width, height, settings);
+    const arrayBuffer = await pngBlob.arrayBuffer();
+    const pngData = new Uint8Array(arrayBuffer);
+    return { width, height, pngData };
+  });
+
+  const icons = await Promise.all(iconPromises);
+
+  // Calculate total size needed for ICO file
+  // ICO Header: 6 bytes
+  // ICO Directory: 16 bytes per entry
+  // Image data: size of each PNG
+  const headerSize = 6;
+  const directoryEntrySize = 16;
+  const directorySize = icons.length * directoryEntrySize;
+  let imageDataOffset = headerSize + directorySize;
+  
+  // Calculate total file size
+  const totalSize = headerSize + directorySize + icons.reduce((sum, icon) => sum + icon.pngData.length, 0);
+
+  // Create ICO file buffer
+  const icoBuffer = new ArrayBuffer(totalSize);
+  const icoView = new DataView(icoBuffer);
+  const icoArray = new Uint8Array(icoBuffer);
+
+  // Write ICO Header
+  // Reserved (must be 0): 2 bytes
+  icoView.setUint16(0, 0, true);
+  // Type (1 = ICO): 2 bytes
+  icoView.setUint16(2, 1, true);
+  // Number of images: 2 bytes
+  icoView.setUint16(4, icons.length, true);
+
+  // Write ICO Directory entries and image data
+  let currentOffset = imageDataOffset;
+  icons.forEach((icon, index) => {
+    const directoryOffset = headerSize + (index * directoryEntrySize);
+    
+    // Width (0-255, 0 means 256): 1 byte
+    // ICO format only supports up to 256x256 in directory entry
+    const width = icon.width > 256 ? 256 : icon.width;
+    const height = icon.height > 256 ? 256 : icon.height;
+    icoView.setUint8(directoryOffset, width === 256 ? 0 : width);
+    // Height (0-255, 0 means 256): 1 byte
+    icoView.setUint8(directoryOffset + 1, height === 256 ? 0 : height);
+    // Color palette (0 for PNG): 1 byte
+    icoView.setUint8(directoryOffset + 2, 0);
+    // Reserved (must be 0): 1 byte
+    icoView.setUint8(directoryOffset + 3, 0);
+    // Color planes (0 or 1 for PNG): 2 bytes
+    icoView.setUint16(directoryOffset + 4, 0, true);
+    // Bits per pixel (0 for PNG): 2 bytes
+    icoView.setUint16(directoryOffset + 6, 0, true);
+    // Size of image data: 4 bytes
+    icoView.setUint32(directoryOffset + 8, icon.pngData.length, true);
+    // Offset of image data: 4 bytes
+    icoView.setUint32(directoryOffset + 12, currentOffset, true);
+    
+    // Write PNG image data
+    icoArray.set(icon.pngData, currentOffset);
+    currentOffset += icon.pngData.length;
+  });
+
+  return new Blob([icoBuffer], { type: 'image/x-icon' });
+}
+
+/**
  * Get platform-specific icon specifications
  */
 export function getPlatformIconSpecs(platformId: string): IconSpec[] {
@@ -280,8 +358,13 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
     
     // Angular
     'angular': [
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
       { width: 16, height: 16, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
       { width: 32, height: 32, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
+      { width: 256, height: 256, filename: 'angular/src/assets/icons/favicon.ico', format: 'ico' },
       { width: 192, height: 192, filename: 'angular/src/assets/icons/icon-192.png', format: 'png' },
       { width: 512, height: 512, filename: 'angular/src/assets/icons/icon-512.png', format: 'png' },
     ],
@@ -321,6 +404,12 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
       { width: 128, height: 128, filename: 'electron/build/icons/png/128x128.png', format: 'png' },
       { width: 256, height: 256, filename: 'electron/build/icons/png/256x256.png', format: 'png' },
       { width: 512, height: 512, filename: 'electron/build/icons/icns/icon.icns', format: 'icns' },
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
+      { width: 16, height: 16, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
+      { width: 32, height: 32, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
       { width: 256, height: 256, filename: 'electron/build/icons/ico/icon.ico', format: 'ico' },
     ],
     
@@ -331,6 +420,12 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
       { width: 128, height: 128, filename: 'flutter-desktop/linux/icons/128x128.png', format: 'png' },
       { width: 256, height: 256, filename: 'flutter-desktop/linux/icons/256x256.png', format: 'png' },
       { width: 1024, height: 1024, filename: 'flutter-desktop/macos/Runner/Assets.xcassets/AppIcon.appiconset/icon_1024.png', format: 'png' },
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
+      { width: 16, height: 16, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
+      { width: 32, height: 32, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
       { width: 256, height: 256, filename: 'flutter-desktop/windows/runner/resources/app_icon.ico', format: 'ico' },
     ],
     
@@ -395,29 +490,49 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
     
     // Next.js / React / Vue / Web PWA
     'nextjs': [
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
       { width: 16, height: 16, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 32, height: 32, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 256, height: 256, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 192, height: 192, filename: 'web/public/icons/icon-192.png', format: 'png' },
       { width: 512, height: 512, filename: 'web/public/icons/icon-512.png', format: 'png' },
       { width: 180, height: 180, filename: 'web/public/icons/apple-touch-icon.png', format: 'png' },
     ],
     'react': [
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
       { width: 16, height: 16, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 32, height: 32, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 256, height: 256, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 192, height: 192, filename: 'web/public/icons/icon-192.png', format: 'png' },
       { width: 512, height: 512, filename: 'web/public/icons/icon-512.png', format: 'png' },
       { width: 180, height: 180, filename: 'web/public/icons/apple-touch-icon.png', format: 'png' },
     ],
     'vue': [
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
       { width: 16, height: 16, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 32, height: 32, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 256, height: 256, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 192, height: 192, filename: 'web/public/icons/icon-192.png', format: 'png' },
       { width: 512, height: 512, filename: 'web/public/icons/icon-512.png', format: 'png' },
       { width: 180, height: 180, filename: 'web/public/icons/apple-touch-icon.png', format: 'png' },
     ],
     'web-pwa': [
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
       { width: 16, height: 16, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 32, height: 32, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'web/public/icons/favicon.ico', format: 'ico' },
+      { width: 256, height: 256, filename: 'web/public/icons/favicon.ico', format: 'ico' },
       { width: 192, height: 192, filename: 'web/public/icons/icon-192.png', format: 'png' },
       { width: 512, height: 512, filename: 'web/public/icons/icon-512.png', format: 'png' },
       { width: 180, height: 180, filename: 'web/public/icons/apple-touch-icon.png', format: 'png' },
@@ -448,6 +563,12 @@ export function getPlatformIconSpecs(platformId: string): IconSpec[] {
       { width: 512, height: 512, filename: '512x512.png', format: 'png' },
       { width: 512, height: 512, filename: 'icon.png', format: 'png' },
       { width: 1024, height: 1024, filename: 'icon.icns', format: 'icns' },
+      // ICO file with multiple sizes (16×16, 32×32, 48×48, 64×64, 128×128, 256×256)
+      { width: 16, height: 16, filename: 'icon.ico', format: 'ico' },
+      { width: 32, height: 32, filename: 'icon.ico', format: 'ico' },
+      { width: 48, height: 48, filename: 'icon.ico', format: 'ico' },
+      { width: 64, height: 64, filename: 'icon.ico', format: 'ico' },
+      { width: 128, height: 128, filename: 'icon.ico', format: 'ico' },
       { width: 256, height: 256, filename: 'icon.ico', format: 'ico' },
       { width: 50, height: 50, filename: 'StoreLogo.png', format: 'png' },
       { width: 30, height: 30, filename: 'Square30x30Logo.png', format: 'png' },

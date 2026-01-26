@@ -4,7 +4,7 @@
  */
 
 import JSZip from 'jszip';
-import { generateIcon, generateICNS, getPlatformIconSpecs, type IconGenerationSettings } from './iconGenerator';
+import { generateIcon, generateICNS, generateICO, getPlatformIconSpecs, type IconGenerationSettings } from './iconGenerator';
 
 export interface DownloadOptions {
   sourceImage: string;
@@ -28,34 +28,86 @@ export async function downloadIconsAsZip(options: DownloadOptions): Promise<void
   const zip = new JSZip();
   let completed = 0;
   
-  // Generate all icons
-  const iconPromises = iconSpecs.map(async (spec) => {
-    try {
-      let blob: Blob;
-      
-      // Use ICNS generator for ICNS format, regular generator for others
-      if (spec.format === 'icns') {
-        blob = await generateICNS(sourceImage, settings);
-      } else {
-        blob = await generateIcon(sourceImage, spec.width, spec.height, settings);
+  // Group ICO files by filename (since ICO files can contain multiple sizes)
+  const icoGroups = new Map<string, Array<{ width: number; height: number; spec: typeof iconSpecs[0] }>>();
+  const nonIcoSpecs: typeof iconSpecs = [];
+  
+  // Separate ICO and non-ICO specs
+  iconSpecs.forEach(spec => {
+    if (spec.format === 'ico') {
+      if (!icoGroups.has(spec.filename)) {
+        icoGroups.set(spec.filename, []);
       }
-      
-      // Use the filename as-is (which includes the full folder path)
-      // For Tauri, filenames are just the icon names, so we add the folder structure
-      const zipPath = platformId === 'tauri' 
-        ? `src-tauri/icons/${spec.filename}`
-        : spec.filename;
-      
-      zip.file(zipPath, blob);
-      
-      completed++;
-      if (onProgress) {
-        onProgress((completed / iconSpecs.length) * 100);
-      }
-    } catch (error) {
-      console.error(`Failed to generate icon ${spec.filename}:`, error);
-      throw error;
+      icoGroups.get(spec.filename)!.push({ width: spec.width, height: spec.height, spec });
+    } else {
+      nonIcoSpecs.push(spec);
     }
+  });
+  
+  // Generate all icons
+  const iconPromises: Promise<void>[] = [];
+  
+  // Generate ICO files (grouped by filename)
+  icoGroups.forEach((sizes, filename) => {
+    const promise = (async () => {
+      try {
+        const blob = await generateICO(
+          sourceImage,
+          sizes.map(s => ({ width: s.width, height: s.height })),
+          settings
+        );
+        
+        // Use the filename as-is (which includes the full folder path)
+        // For Tauri, filenames are just the icon names, so we add the folder structure
+        const zipPath = platformId === 'tauri' 
+          ? `src-tauri/icons/${filename}`
+          : filename;
+        
+        zip.file(zipPath, blob);
+        
+        completed++;
+        if (onProgress) {
+          onProgress((completed / (icoGroups.size + nonIcoSpecs.length)) * 100);
+        }
+      } catch (error) {
+        console.error(`Failed to generate ICO file ${filename}:`, error);
+        throw error;
+      }
+    })();
+    iconPromises.push(promise);
+  });
+  
+  // Generate non-ICO icons (PNG, ICNS)
+  nonIcoSpecs.forEach(spec => {
+    const promise = (async () => {
+      try {
+        let blob: Blob;
+        
+        // Use ICNS generator for ICNS format, regular generator for PNG
+        if (spec.format === 'icns') {
+          blob = await generateICNS(sourceImage, settings);
+        } else {
+          blob = await generateIcon(sourceImage, spec.width, spec.height, settings);
+        }
+        
+        // Use the filename as-is (which includes the full folder path)
+        // For Tauri, filenames are just the icon names, so we add the folder structure
+        const zipPath = platformId === 'tauri' 
+          ? `src-tauri/icons/${spec.filename}`
+          : spec.filename;
+        
+        zip.file(zipPath, blob);
+        
+        completed++;
+        if (onProgress) {
+          onProgress((completed / (icoGroups.size + nonIcoSpecs.length)) * 100);
+        }
+      } catch (error) {
+        console.error(`Failed to generate icon ${spec.filename}:`, error);
+        throw error;
+      }
+    })();
+    iconPromises.push(promise);
   });
   
   await Promise.all(iconPromises);
