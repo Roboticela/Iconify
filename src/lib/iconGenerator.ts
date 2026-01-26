@@ -3,8 +3,6 @@
  * Generates icons with proper sizing, background, scale, position, and border roundness
  */
 
-import * as png2icons from 'png2icons';
-import { Buffer } from 'buffer';
 
 export interface IconGenerationSettings {
   backgroundColor: string;
@@ -159,68 +157,68 @@ export async function generateIcon(
 /**
  * Generate an ICNS file with multiple icon sizes
  * ICNS files contain multiple resolutions in a single file
- * Uses png2icons library which is browser-compatible and has no dependencies
+ * Uses API endpoint to generate ICNS server-side
  */
 export async function generateICNS(
   sourceImage: string,
   settings: IconGenerationSettings
 ): Promise<Blob> {
-  // Generate a high-resolution PNG (1024x1024 is ideal for png2icons)
-  // png2icons will automatically generate all required icon sizes from this
+  // Generate a high-resolution PNG (1024x1024) to send to the API
   const pngBlob = await generateIcon(sourceImage, 1024, 1024, settings);
-  const arrayBuffer = await pngBlob.arrayBuffer();
-  const pngData = new Uint8Array(arrayBuffer);
   
-  // Convert Uint8Array to Buffer for png2icons
-  // png2icons expects a Buffer containing PNG file data
-  const pngBuffer = Buffer.from(pngData);
+  // Convert the PNG blob to base64 for API transmission
+  // Use FileReader for efficient base64 conversion
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix (data:image/png;base64,)
+      const base64Data = result.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(pngBlob);
+  });
   
-  // Generate ICNS file using png2icons
-  // createICNS(input, scalingAlgorithm, numOfColors)
-  // - input: Buffer containing PNG data
-  // - scalingAlgorithm: 2 = BICUBIC for good quality
-  //   Constants: 0=NEAREST_NEIGHBOR, 1=BILINEAR, 2=BICUBIC, 3=BEZIER, 4=HERMITE, 5=BICUBIC2
-  // - numOfColors: 0 for lossless (no color reduction)
-  const icnsBuffer = png2icons.createICNS(
-    pngBuffer,
-    2, // BICUBIC interpolation for good quality
-    0  // Lossless, no color reduction
-  );
+  // Get the API URL from environment variable
+  const apiUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
+  const endpoint = `${apiUrl}/api/generate-icns`;
   
-  if (!icnsBuffer) {
-    throw new Error('Failed to generate ICNS file');
+  // Prepare the request payload
+  const payload = {
+    image: base64, // Base64 string without data URL prefix
+    settings: {
+      backgroundColor: settings.backgroundColor,
+      scale: settings.scale,
+      positionX: settings.positionX,
+      positionY: settings.positionY,
+      borderRoundness: settings.borderRoundness,
+    },
+  };
+  
+  // Call the API endpoint
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to generate ICNS file: ${response.status} ${response.statusText}. ${errorText}`);
   }
   
-  // Convert Buffer to Uint8Array for Blob
-  let bufferArray: Uint8Array;
+  // Get the ICNS file as a blob
+  const icnsBlob = await response.blob();
   
-  if (Buffer.isBuffer(icnsBuffer)) {
-    // Node.js Buffer - create a new Uint8Array from the buffer data
-    const length = icnsBuffer.length;
-    const arrayBuf = new ArrayBuffer(length);
-    const tempArray = new Uint8Array(arrayBuf);
-    for (let i = 0; i < length; i++) {
-      tempArray[i] = icnsBuffer[i];
-    }
-    bufferArray = tempArray;
-  } else {
-    // Check if it's a Uint8Array or convert it
-    const buffer = icnsBuffer as any;
-    if (buffer && typeof buffer.length === 'number') {
-      // Try to use it as Uint8Array or convert
-      const length = buffer.length;
-      const arrayBuf = new ArrayBuffer(length);
-      bufferArray = new Uint8Array(arrayBuf);
-      // Copy bytes
-      for (let i = 0; i < length; i++) {
-        bufferArray[i] = buffer[i] || 0;
-      }
-    } else {
-      throw new Error('Invalid ICNS buffer format');
-    }
+  // Verify it's an ICNS file
+  if (!icnsBlob || icnsBlob.size === 0) {
+    throw new Error('API returned empty ICNS file');
   }
-
-  return new Blob([bufferArray as unknown as BlobPart], { type: 'image/icns' });
+  
+  return icnsBlob;
 }
 
 /**
