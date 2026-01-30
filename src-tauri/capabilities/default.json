@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "dialog:allow-save",
-    "opener:default"
+    "opener:default",
+    "window-state:default"
   ]
 }

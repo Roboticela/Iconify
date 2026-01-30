@@ -59,10 +59,11 @@
     "verify": "node scripts/verify-checksum.cjs"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-opener": "^2.0.0",
-    "@tailwindcss/vite": "^4.1.18",
+    "@tauri-apps/plugin-window-state": "^2.4.1",
     "buffer": "^6.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.29.0",

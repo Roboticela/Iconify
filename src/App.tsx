@@ -3,12 +3,16 @@ import AppHeader from "./components/AppHeader";
 import ImageSelector from "./components/ImageSelector";
 import InfoAndColorSelector from "./components/InfoAndColorSelector";
 import PreviewContainer from "./components/PreviewContainer";
+import { isTauri } from "./lib/tauri";
 
 function App() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const useBlackBg = isTauri() && selectedImage == null;
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto custom-scrollbar">
+    <div
+      className={`min-h-screen overflow-x-hidden overflow-y-auto custom-scrollbar ${useBlackBg ? "bg-black" : "bg-background"}`}
+    >
       <AppHeader selectedImage={selectedImage} onResetImage={() => setSelectedImage(null)} />
       <div className="flex flex-col md:flex-row gap-2 sm:gap-4 p-2 sm:p-4 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] overflow-x-hidden overflow-y-auto md:overflow-y-hidden">
         {/* Left Side - Two Containers */}
@@ -26,7 +30,7 @@ function App() {
           </div>
         </div>
         {/* Right Side - Preview Container */}
-        <div className="w-full md:flex-[0.8] min-w-0 md:min-w-[400px] min-h-[400px] md:h-full md:max-h-full overflow-hidden">
+        <div className="w-full md:flex-1 min-w-0 md:min-w-[400px] min-h-[400px] md:h-full md:max-h-full overflow-hidden">
           <PreviewContainer selectedImage={selectedImage} />
         </div>
       </div>
