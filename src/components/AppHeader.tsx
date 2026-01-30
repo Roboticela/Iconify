@@ -27,7 +27,8 @@ import {
   Gamepad2,
   RotateCcw,
   Download,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../components/ui/button";
@@ -41,6 +42,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "../lib/utils";
+import { isTauri as detectTauri } from "../lib/tauri";
 import { downloadIconsAsZip } from "../lib/downloadHandler";
 
 const themes: { name: ThemeName; label: string; colors: string }[] = [
@@ -130,6 +132,8 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
   const [menuButtons, setMenuButtons] = useState<string[]>([]);
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
+  const [isTauri, setIsTauri] = useState(false);
   
   const headerRef = useRef<HTMLElement>(null);
   const buttonsContainerRef = useRef<HTMLDivElement>(null);
@@ -385,6 +389,12 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
   }, [allButtonIds]);
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsSafari(ua.includes("Safari") && !ua.includes("Chrome") && !ua.includes("Chromium"));
+    setIsTauri(detectTauri());
+  }, []);
+
+  useEffect(() => {
     // Initial adjustment
     const timer = setTimeout(() => adjustVisibleButtons(), 100);
 
@@ -408,13 +418,25 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
   const menuButtonItems = allButtons.filter(btn => menuButtons.includes(btn.id));
 
   return (
-    <motion.header 
-      ref={headerRef}
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="w-full h-14 border-b border-border/40 bg-card/40 backdrop-blur-md flex items-center px-4 gap-4 overflow-hidden"
-    >
+    <>
+      {isSafari && !isTauri && (
+        <div
+          role="banner"
+          className="w-full py-2 px-4 flex items-center justify-center gap-2 text-sm bg-amber-500/15 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200 border-b border-amber-500/20"
+        >
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden />
+          <span>
+            Transparency effects may not work correctly in Safari. Use Chrome for the best experience.
+          </span>
+        </div>
+      )}
+      <motion.header 
+        ref={headerRef}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full h-14 border-b border-border/40 bg-card/40 backdrop-blur-md flex items-center px-4 gap-4 overflow-hidden"
+      >
       <motion.div 
         ref={leftSectionRef} 
         className="flex items-center gap-3 flex-shrink-0"
@@ -763,6 +785,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
       {/* License Modal */}
       <LicenseModal isOpen={licenseModalOpen} onClose={() => setLicenseModalOpen(false)} />
     </motion.header>
+    </>
   );
 }
 

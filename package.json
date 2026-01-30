@@ -51,7 +51,6 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "prebuild": "node scripts/update-year.cjs",
-    "predev": "node scripts/update-year.cjs",
     "build:desktop": "npm run build && npm run tauri build && node scripts/generate-checksums.cjs",
     "build:android": "npm run tauri android build && node scripts/generate-checksums.cjs",
     "build:ios": "npm run tauri ios build && node scripts/generate-checksums.cjs",

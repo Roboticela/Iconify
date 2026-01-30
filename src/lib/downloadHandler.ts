@@ -85,7 +85,16 @@ export async function downloadIconsAsZip(options: DownloadOptions): Promise<void
         
         // Use ICNS generator for ICNS format, regular generator for PNG
         if (spec.format === 'icns') {
-          blob = await generateICNS(sourceImage, settings);
+          try {
+            blob = await generateICNS(sourceImage, settings);
+          } catch (icnsError) {
+            console.warn(`ICNS endpoint unavailable, skipping ${spec.filename}:`, icnsError);
+            completed++;
+            if (onProgress) {
+              onProgress((completed / (icoGroups.size + nonIcoSpecs.length)) * 100);
+            }
+            return;
+          }
         } else {
           blob = await generateIcon(sourceImage, spec.width, spec.height, settings);
         }
