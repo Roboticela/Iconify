@@ -47,28 +47,33 @@ export async function generateIcon(
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
       
-      // Helper function to draw rounded rectangle
+      // Helper function to draw rounded rectangle with true circular arcs
       const drawRoundedRect = (x: number, y: number, w: number, h: number, radius: number) => {
+        // Clamp radius to not exceed half of width or height
+        const maxRadius = Math.min(w / 2, h / 2);
+        const r = Math.min(radius, maxRadius);
+        
         ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + w - radius, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-        ctx.lineTo(x + w, y + h - radius);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-        ctx.lineTo(x + radius, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
         ctx.closePath();
       };
+      
+      // Calculate border radius once for the entire icon (used for both background and image clipping)
+      // Treat borderRoundness as percentage (0-100) of smallest canvas dimension
+      const iconRadius = settings.borderRoundness > 0 
+        ? (settings.borderRoundness / 100) * (Math.min(width, height) / 2)
+        : 0;
       
       // Draw background (transparent backgrounds remain transparent in output)
       if (settings.backgroundColor !== 'transparent') {
         ctx.fillStyle = settings.backgroundColor;
-        if (settings.borderRoundness > 0) {
+        if (iconRadius > 0) {
           // Draw rounded rectangle background
-          const radius = Math.min(settings.borderRoundness, Math.min(width, height) / 2);
-          drawRoundedRect(0, 0, width, height, radius);
+          drawRoundedRect(0, 0, width, height, iconRadius);
           ctx.fill();
         } else {
           ctx.fillRect(0, 0, width, height);
@@ -117,18 +122,17 @@ export async function generateIcon(
       const x = (width - drawWidth) / 2 + offsetX;
       const y = (height - drawHeight) / 2 + offsetY;
       
-      // Apply border roundness to image if needed
-      if (settings.borderRoundness > 0) {
-        const radius = Math.min(settings.borderRoundness, Math.min(width, height) / 2);
+      // Apply border roundness to entire canvas (clipping to match background)
+      if (iconRadius > 0) {
         ctx.save();
-        drawRoundedRect(x, y, drawWidth, drawHeight, radius);
+        drawRoundedRect(0, 0, width, height, iconRadius);
         ctx.clip();
       }
       
       // Draw the entire image without cropping (contain behavior)
       ctx.drawImage(img, x, y, drawWidth, drawHeight);
       
-      if (settings.borderRoundness > 0) {
+      if (iconRadius > 0) {
         ctx.restore();
       }
       

@@ -654,10 +654,10 @@ export default function InfoAndColorSelector({ selectedImage }: InfoAndColorSele
               label="Border Roundness"
               icon={<CornerDownRight className="w-3 h-3" />}
               value={borderRoundness}
-              onChange={setBorderRoundness}
+              onChange={(v) => setBorderRoundness(Math.max(0, Math.min(100, v)))}
               min={0}
               max={100}
-              unit="px"
+              unit="%"
             />
           </motion.div>
         </div>

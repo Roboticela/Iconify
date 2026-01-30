@@ -386,6 +386,11 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
                   const [width, height] = dimension.split("×").map(d => parseInt(d.trim()));
                   const maxPreviewSize = 120; // Maximum preview size in pixels
                   const previewSize = Math.min(maxPreviewSize, Math.max(width, height));
+                  // Treat borderRoundness as percentage (0-100) of smallest dimension (matching download logic)
+                  const actualRadius = (borderRoundness / 100) * (Math.min(width, height) / 2);
+                  // Scale the radius proportionally to the preview size
+                  const scaleFactor = previewSize / Math.max(width, height);
+                  const scaledRadius = actualRadius * scaleFactor;
                   
                   return (
                     <motion.div
@@ -405,7 +410,7 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
                           minHeight: `${previewSize}px`,
                           maxWidth: "none",
                           maxHeight: "none",
-                          borderRadius: `${borderRoundness}px`,
+                          borderRadius: `${scaledRadius}px`,
                           backgroundColor: backgroundColor === "transparent" 
                             ? "transparent" 
                             : backgroundColor,
@@ -425,7 +430,7 @@ export default function PreviewContainer({ selectedImage }: PreviewContainerProp
                             maxWidth: "none",
                             maxHeight: "none",
                             objectFit: "contain",
-                            borderRadius: `${borderRoundness}px`,
+                            borderRadius: `${scaledRadius}px`,
                             transform: `translate(calc(-50% + ${(positionX - 50) * previewSize / 100}px), calc(-50% + ${(positionY - 50) * previewSize / 100}px))`,
                             transformOrigin: "center",
                             position: "absolute",
