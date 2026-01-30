@@ -15,3 +15,28 @@ export function isTauri(): boolean {
     w.__TAURI__ !== undefined
   );
 }
+
+export interface OpenLinkOptions {
+  /** When in browser: open in new tab. When in Tauri, URL always opens in default browser. Default: false (same tab in browser). */
+  openInNewTab?: boolean;
+}
+
+/**
+ * Open a link: in Tauri opens in the system default browser; in browser does normal navigation.
+ */
+export async function openLink(url: string, options: OpenLinkOptions = {}): Promise<void> {
+  const { openInNewTab = false } = options;
+
+  if (isTauri()) {
+    const { openUrl } = await import("@tauri-apps/plugin-opener");
+    await openUrl(url);
+    return;
+  }
+
+  // Browser: normal link navigation
+  if (openInNewTab) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  } else {
+    window.location.href = url;
+  }
+}

@@ -61,6 +61,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-opener": "^2.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "buffer": "^6.0.3",
     "clsx": "^2.1.1",

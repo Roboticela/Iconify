@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { openLink } from "../lib/tauri";
 
 interface LicenseModalProps {
   isOpen: boolean;
@@ -238,14 +239,13 @@ export default function LicenseModal({ isOpen, onClose }: LicenseModalProps) {
                       </p>
                       <p className="text-foreground/80 text-xs sm:text-sm mt-2">
                         For the full text of the GNU Affero General Public License v3.0, please visit:{" "}
-                        <a 
-                          href="https://www.gnu.org/licenses/agpl-3.0.html" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                        <button
+                          type="button"
+                          onClick={() => openLink('https://www.gnu.org/licenses/agpl-3.0.html', { openInNewTab: true })}
+                          className="text-primary hover:underline bg-transparent border-none p-0 cursor-pointer font-inherit text-inherit"
                         >
                           https://www.gnu.org/licenses/agpl-3.0.html
-                        </a>
+                        </button>
                       </p>
                     </div>
                   </motion.div>

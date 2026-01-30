@@ -43,7 +43,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "../lib/utils";
-import { isTauri as detectTauri } from "../lib/tauri";
+import { isTauri as detectTauri, openLink } from "../lib/tauri";
 import { downloadIconsAsZip } from "../lib/downloadHandler";
 
 const themes: { name: ThemeName; label: string; colors: string }[] = [
@@ -727,10 +727,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
               >
                 <DropdownMenuItem 
                   className="flex items-center gap-3 cursor-pointer"
-                  onClick={() => {
-                    const githubUrl = `https://github.com/Roboticela/Iconify`;
-                    window.open(githubUrl, '_blank', 'noopener,noreferrer');
-                  }}
+                  onClick={() => openLink('https://github.com/Roboticela/Iconify', { openInNewTab: true })}
                 >
                   <Github className="w-4 h-4" />
                   <span>Github</span>
@@ -762,8 +759,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => {
                     const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
-                    const supportUrl = `${siteUrl}/support`;
-                    window.open(supportUrl, '_blank', 'noopener,noreferrer');
+                    openLink(`${siteUrl}/support`, { openInNewTab: true });
                   }}
                 >
                   <HelpCircle className="w-4 h-4" />
@@ -784,8 +780,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => {
                     const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
-                    const privacyUrl = `${siteUrl}/privacy`;
-                    window.open(privacyUrl, '_blank', 'noopener,noreferrer');
+                    openLink(`${siteUrl}/privacy`, { openInNewTab: true });
                   }}
                 >
                   <Shield className="w-4 h-4" />
@@ -803,8 +798,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => {
                     const siteUrl = import.meta.env.VITE_SITE_URL || 'https://iconify.roboticela.com';
-                    const termsUrl = `${siteUrl}/terms`;
-                    window.open(termsUrl, '_blank', 'noopener,noreferrer');
+                    openLink(`${siteUrl}/terms`, { openInNewTab: true });
                   }}
                 >
                   <Scale className="w-4 h-4" />
