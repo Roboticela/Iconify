@@ -27,6 +27,7 @@ import {
   Gamepad2,
   RotateCcw,
   Download,
+  Save,
   HelpCircle,
   AlertTriangle
 } from "lucide-react";
@@ -150,8 +151,8 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
     {
       id: "download",
       type: "button",
-      label: "Download",
-      icon: <Download className="w-4 h-4" />,
+      label: isTauri ? "Save" : "Download",
+      icon: isTauri ? <Save className="w-4 h-4" /> : <Download className="w-4 h-4" />,
       component: (
         <motion.div whileHover={selectedImage ? { scale: 1.02 } : {}} whileTap={selectedImage ? { scale: 0.98 } : {}} transition={{ duration: 0.2 }}>
           <Button 
@@ -166,36 +167,75 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
               setDownloadProgress(0);
               
               try {
-                await downloadIconsAsZip({
-                  sourceImage: selectedImage,
-                  platformId: selectedPlatform,
-                  settings: {
-                    backgroundColor,
-                    scale,
-                    positionX,
-                    positionY,
-                    borderRoundness,
-                  },
-                  onProgress: (progress) => {
-                    setDownloadProgress(progress);
-                  },
-                });
+                if (isTauri) {
+                  const zipBlob = await downloadIconsAsZip({
+                    sourceImage: selectedImage,
+                    platformId: selectedPlatform,
+                    settings: {
+                      backgroundColor,
+                      scale,
+                      positionX,
+                      positionY,
+                      borderRoundness,
+                    },
+                    onProgress: (progress) => {
+                      setDownloadProgress(progress);
+                    },
+                    returnBlob: true,
+                  });
+                  if (zipBlob) {
+                    const { save } = await import('@tauri-apps/plugin-dialog');
+                    const { invoke } = await import('@tauri-apps/api/core');
+                    const defaultName = `icons-${selectedPlatform}-${Date.now()}.zip`;
+                    const filePath = await save({
+                      defaultPath: defaultName,
+                      filters: [{ name: 'Zip archive', extensions: ['zip'] }],
+                    });
+                    if (filePath) {
+                      const base64 = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const result = reader.result as string;
+                          resolve(result.split(',')[1] ?? '');
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(zipBlob);
+                      });
+                      await invoke('write_file', { path: filePath, data: base64 });
+                    }
+                  }
+                } else {
+                  await downloadIconsAsZip({
+                    sourceImage: selectedImage,
+                    platformId: selectedPlatform,
+                    settings: {
+                      backgroundColor,
+                      scale,
+                      positionX,
+                      positionY,
+                      borderRoundness,
+                    },
+                    onProgress: (progress) => {
+                      setDownloadProgress(progress);
+                    },
+                  });
+                }
               } catch (error) {
-                console.error('Download failed:', error);
-                alert('Failed to download icons. Please try again.');
+                console.error(isTauri ? 'Save failed:' : 'Download failed:', error);
+                alert(isTauri ? 'Failed to save icons. Please try again.' : 'Failed to download icons. Please try again.');
               } finally {
                 setIsDownloading(false);
                 setDownloadProgress(null);
               }
             }}
           >
-            <Download className="w-4 h-4" />
+            {isTauri ? <Save className="w-4 h-4" /> : <Download className="w-4 h-4" />}
             <span className="hidden lg:inline">
               {isDownloading 
                 ? downloadProgress !== null 
-                  ? `Downloading... ${Math.round(downloadProgress)}%`
+                  ? (isTauri ? `Saving... ${Math.round(downloadProgress)}%` : `Downloading... ${Math.round(downloadProgress)}%`)
                   : 'Preparing...'
-                : 'Download'
+                : (isTauri ? 'Save' : 'Download')
               }
             </span>
           </Button>

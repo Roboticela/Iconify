@@ -3,6 +3,7 @@
  * Generates icons with proper sizing, background, scale, position, and border roundness
  */
 
+import { isTauri } from './tauri';
 
 export interface IconGenerationSettings {
   backgroundColor: string;
@@ -161,12 +162,55 @@ export async function generateIcon(
 /**
  * Generate an ICNS file with multiple icon sizes
  * ICNS files contain multiple resolutions in a single file
- * Uses API endpoint to generate ICNS server-side
+ * Uses Tauri command if running in Tauri, otherwise falls back to API endpoint
  */
 export async function generateICNS(
   sourceImage: string,
   settings: IconGenerationSettings
 ): Promise<Blob> {
+  if (isTauri()) {
+    // Use Tauri v2 to generate ICNS natively
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Generate all required PNG sizes for ICNS (standard macOS icon sizes)
+      const sizes = [16, 32, 64, 128, 256, 512, 1024];
+      const pngImages: { size: number; data: string }[] = [];
+      
+      for (const size of sizes) {
+        const pngBlob = await generateIcon(sourceImage, size, size, settings);
+        // Use FileReader to avoid "Maximum call stack size exceeded" with large PNGs
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            const base64Data = result.split(',')[1];
+            resolve(base64Data ?? '');
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(pngBlob);
+        });
+        pngImages.push({ size, data: base64 });
+      }
+      
+      // Call Tauri command to generate ICNS
+      const icnsBase64 = await invoke('generate_icns', { images: pngImages });
+      
+      // Convert base64 back to blob
+      const binaryString = atob(icnsBase64 as string);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      return new Blob([bytes], { type: 'image/icns' });
+    } catch (error) {
+      console.error('Tauri ICNS generation failed, falling back to API:', error);
+      // Fall through to API method
+    }
+  }
+  
+  // Fallback to API method (for web or if Tauri fails)
   // Generate a high-resolution PNG (1024x1024) to send to the API
   const pngBlob = await generateIcon(sourceImage, 1024, 1024, settings);
   

@@ -11,12 +11,15 @@ export interface DownloadOptions {
   platformId: string;
   settings: IconGenerationSettings;
   onProgress?: (progress: number) => void;
+  /** When true, returns the zip Blob instead of triggering a browser download (e.g. for Tauri save dialog) */
+  returnBlob?: boolean;
 }
 
 /**
- * Download all icons for a platform as a zip file
+ * Download all icons for a platform as a zip file.
+ * When returnBlob is true, returns the zip Blob instead of triggering download.
  */
-export async function downloadIconsAsZip(options: DownloadOptions): Promise<void> {
+export async function downloadIconsAsZip(options: DownloadOptions): Promise<Blob | void> {
   const { sourceImage, platformId, settings, onProgress } = options;
   
   const iconSpecs = getPlatformIconSpecs(platformId);
@@ -124,6 +127,14 @@ export async function downloadIconsAsZip(options: DownloadOptions): Promise<void
   // Generate zip file
   const zipBlob = await zip.generateAsync({ type: 'blob' });
   
+  if (onProgress) {
+    onProgress(100);
+  }
+  
+  if (options.returnBlob) {
+    return zipBlob;
+  }
+  
   // Download the zip file
   const url = URL.createObjectURL(zipBlob);
   const a = document.createElement('a');
@@ -133,8 +144,4 @@ export async function downloadIconsAsZip(options: DownloadOptions): Promise<void
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
-  if (onProgress) {
-    onProgress(100);
-  }
 }
