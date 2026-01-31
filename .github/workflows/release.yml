@@ -28,29 +28,37 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows builds (Tauri v2: --bundles only accepts deb/rpm/appimage; use -c for Windows bundle type)
+          # Windows builds (Tauri v2: use config file for bundle type; npm run tauri build -- ... so args reach tauri)
           - platform: windows-x64
             runs-on: windows-latest
             artifact-name: iconify-setup.exe
-            build-command: npm run tauri build -c '{"bundle":{"targets":"nsis"}}' --target x86_64-pc-windows-msvc
+            build-target: x86_64-pc-windows-msvc
+            bundle-target: nsis
+            build-command: npm run tauri build -- -c src-tauri/tauri.windows-bundle.json --target x86_64-pc-windows-msvc
             artifact-path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/Roboticela Iconify_*.exe
             
           - platform: windows-x64-msi
             runs-on: windows-latest
             artifact-name: iconify-setup.msi
-            build-command: npm run tauri build -c '{"bundle":{"targets":"msi"}}' --target x86_64-pc-windows-msvc
+            build-target: x86_64-pc-windows-msvc
+            bundle-target: msi
+            build-command: npm run tauri build -- -c src-tauri/tauri.windows-bundle.json --target x86_64-pc-windows-msvc
             artifact-path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Roboticela Iconify_*.msi
             
           - platform: windows-aarch64
             runs-on: windows-latest
             artifact-name: iconify-setup-arm64.exe
-            build-command: npm run tauri build -c '{"bundle":{"targets":"nsis"}}' --target aarch64-pc-windows-msvc
+            build-target: aarch64-pc-windows-msvc
+            bundle-target: nsis
+            build-command: npm run tauri build -- -c src-tauri/tauri.windows-bundle.json --target aarch64-pc-windows-msvc
             artifact-path: src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/Roboticela Iconify_*.exe
             
           - platform: windows-i686
             runs-on: windows-latest
             artifact-name: iconify-setup-x86.exe
-            build-command: npm run tauri build -c '{"bundle":{"targets":"nsis"}}' --target i686-pc-windows-msvc
+            build-target: i686-pc-windows-msvc
+            bundle-target: nsis
+            build-command: npm run tauri build -- -c src-tauri/tauri.windows-bundle.json --target i686-pc-windows-msvc
             artifact-path: src-tauri/target/i686-pc-windows-msvc/release/bundle/nsis/Roboticela Iconify_*.exe
             
           # Linux builds
@@ -485,6 +493,13 @@ jobs:
           # Ensure any existing bundle_dmg.sh scripts have execute permissions
           find src-tauri/target -name "bundle_dmg.sh" -exec chmod +x {} \; 2>/dev/null || true
           echo "Current umask: $(umask)"
+
+      - name: Write Windows bundle config
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo '{"bundle":{"targets":"${{ matrix.bundle-target }}"}}' > src-tauri/tauri.windows-bundle.json
+          cat src-tauri/tauri.windows-bundle.json
 
       - name: Build platform-specific artifact
         shell: bash
