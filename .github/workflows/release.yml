@@ -365,6 +365,15 @@ jobs:
             npm run tauri ios init || echo "Warning: iOS init failed"
           fi
 
+      - name: Initialize Android project (before build, for Android builds)
+        if: contains(matrix.platform, 'android')
+        run: |
+          # Ensure Android project is initialized before building (gen/android not in repo)
+          if [ ! -d "src-tauri/gen/android" ]; then
+            echo "Initializing Android project before build..."
+            CI=true npm run tauri android init
+          fi
+
       - name: Configure iOS code signing (for iOS builds)
         if: contains(matrix.platform, 'ios')
         run: |
