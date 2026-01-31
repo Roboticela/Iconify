@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Iconify",
+  "productName": "Roboticela Iconify",
   "version": "0.1.0",
   "identifier": "com.roboticela.iconify",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Iconify",
+        "title": "Roboticela Iconify",
         "width": 1200,
         "height": 800,
         "center": true,
