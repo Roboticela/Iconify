@@ -11,6 +11,31 @@ if (typeof globalThis !== 'undefined') {
   (globalThis as any).UZIP = UZIP;
 }
 
+const ALLOWED_ORIGINS = [
+  'https://app.iconify.roboticela.com',
+  'http://app.iconify.roboticela.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin') ?? '';
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(request),
+  });
+}
+
 interface IconGenerationSettings {
   backgroundColor: string;
   scale: number; // percentage (0-500)
@@ -32,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!body.image) {
       return NextResponse.json(
         { error: 'Image is required' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
@@ -49,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (!pngBuffer.subarray(0, 8).equals(pngSignature)) {
       return NextResponse.json(
         { error: 'Invalid PNG format' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
@@ -68,7 +93,7 @@ export async function POST(request: NextRequest) {
     if (!icnsBuffer) {
       return NextResponse.json(
         { error: 'Failed to generate ICNS file' },
-        { status: 500 }
+        { status: 500, headers: getCorsHeaders(request) }
       );
     }
 
@@ -79,6 +104,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(icnsArray, {
       status: 200,
       headers: {
+        ...getCorsHeaders(request),
         'Content-Type': 'image/icns',
         'Content-Disposition': 'attachment; filename="icon.icns"',
       },
@@ -90,7 +116,7 @@ export async function POST(request: NextRequest) {
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }
