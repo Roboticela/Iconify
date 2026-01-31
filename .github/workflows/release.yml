@@ -61,98 +61,98 @@ jobs:
             build-command: npm run tauri build -- -c src-tauri/tauri.windows-bundle.json --target i686-pc-windows-msvc
             artifact-path: src-tauri/target/i686-pc-windows-msvc/release/bundle/nsis/Roboticela Iconify_*.exe
             
-          # Linux builds
+          # Linux builds (use -- so npm passes --bundles/--target to tauri)
           - platform: linux-x64-appimage
             runs-on: ubuntu-latest
             artifact-name: iconify.AppImage
-            build-command: npm run tauri build --bundles appimage --target x86_64-unknown-linux-gnu
+            build-command: npm run tauri build -- --bundles appimage --target x86_64-unknown-linux-gnu
             artifact-path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/Roboticela Iconify_*.AppImage
             
           - platform: linux-x64-deb
             runs-on: ubuntu-latest
             artifact-name: iconify.deb
-            build-command: npm run tauri build --bundles deb --target x86_64-unknown-linux-gnu
+            build-command: npm run tauri build -- --bundles deb --target x86_64-unknown-linux-gnu
             artifact-path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/Roboticela Iconify_*.deb
             
           - platform: linux-x64-rpm
             runs-on: ubuntu-latest
             artifact-name: iconify.rpm
-            build-command: npm run tauri build --bundles rpm --target x86_64-unknown-linux-gnu
+            build-command: npm run tauri build -- --bundles rpm --target x86_64-unknown-linux-gnu
             artifact-path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm/Roboticela Iconify_*.rpm
             
-          # macOS builds
+          # macOS builds (use -- so npm passes --bundles/--target to tauri)
           - platform: macos-x64
             runs-on: macos-latest
             artifact-name: iconify.dmg
-            build-command: npm run tauri build --bundles dmg --target x86_64-apple-darwin
+            build-command: npm run tauri build -- --bundles dmg --target x86_64-apple-darwin
             artifact-path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/Roboticela Iconify_*.dmg
             
           - platform: macos-arm64
             runs-on: macos-latest
             artifact-name: iconify-arm64.dmg
-            build-command: npm run tauri build --bundles dmg --target aarch64-apple-darwin
+            build-command: npm run tauri build -- --bundles dmg --target aarch64-apple-darwin
             artifact-path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Roboticela Iconify_*.dmg
             
           - platform: macos-x64-app
             runs-on: macos-latest
             artifact-name: iconify.app.tar.gz
-            build-command: npm run tauri build --bundles app --target x86_64-apple-darwin && APP_BUNDLE=$(find src-tauri/target/x86_64-apple-darwin/release/bundle/macos -name "*.app" -type d | head -1) && tar -czf iconify.app.tar.gz -C "$(dirname "$APP_BUNDLE")" "$(basename "$APP_BUNDLE")"
+            build-command: npm run tauri build -- --bundles app --target x86_64-apple-darwin && APP_BUNDLE=$(find src-tauri/target/x86_64-apple-darwin/release/bundle/macos -name "*.app" -type d | head -1) && tar -czf iconify.app.tar.gz -C "$(dirname "$APP_BUNDLE")" "$(basename "$APP_BUNDLE")"
             artifact-path: iconify.app.tar.gz
             
           - platform: macos-arm64-app
             runs-on: macos-latest
             artifact-name: iconify-arm64.app.tar.gz
-            build-command: npm run tauri build --bundles app --target aarch64-apple-darwin && APP_BUNDLE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app" -type d | head -1) && tar -czf iconify-arm64.app.tar.gz -C "$(dirname "$APP_BUNDLE")" "$(basename "$APP_BUNDLE")"
+            build-command: npm run tauri build -- --bundles app --target aarch64-apple-darwin && APP_BUNDLE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app" -type d | head -1) && tar -czf iconify-arm64.app.tar.gz -C "$(dirname "$APP_BUNDLE")" "$(basename "$APP_BUNDLE")"
             artifact-path: iconify-arm64.app.tar.gz
             
           - platform: macos-universal
             runs-on: macos-latest
             artifact-name: iconify-universal.dmg
-            build-command: npm run tauri build --bundles dmg --target universal-apple-darwin
+            build-command: npm run tauri build -- --bundles dmg --target universal-apple-darwin
             artifact-path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/Roboticela Iconify_*.dmg
             
-          # Android builds
+          # Android builds (use -- so npm passes --target/--apk to tauri)
           - platform: android-aarch64
             runs-on: ubuntu-latest
             artifact-name: iconify-aarch64.apk
-            build-command: npm run tauri android build --target aarch64 --apk true
+            build-command: npm run tauri android build -- --target aarch64 --apk true
             artifact-path: src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk
             
           - platform: android-armv7
             runs-on: ubuntu-latest
             artifact-name: iconify-armv7.apk
-            build-command: npm run tauri android build --target armv7 --apk true
+            build-command: npm run tauri android build -- --target armv7 --apk true
             artifact-path: src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk
             
           - platform: android-x86_64
             runs-on: ubuntu-latest
             artifact-name: iconify-x86_64.apk
-            build-command: npm run tauri android build --target x86_64 --apk true
+            build-command: npm run tauri android build -- --target x86_64 --apk true
             artifact-path: src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk
             
           - platform: android-i686
             runs-on: ubuntu-latest
             artifact-name: iconify-i686.apk
-            build-command: npm run tauri android build --target i686 --apk true
+            build-command: npm run tauri android build -- --target i686 --apk true
             artifact-path: src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk
             
-          # iOS builds
+          # iOS builds (use -- so npm passes --target to tauri)
           # - platform: ios-aarch64
           #   runs-on: macos-latest
           #   artifact-name: iconify.ipa
-          #   build-command: npm run tauri ios build --target aarch64
+          #   build-command: npm run tauri ios build -- --target aarch64
           #   artifact-path: src-tauri/gen/ios/build/Build/Products/Release-iphoneos/*.ipa
           #   
           - platform: ios-simulator-aarch64
             runs-on: macos-latest
             artifact-name: iconify-simulator.app
-            build-command: npm run tauri ios build --target aarch64-sim
+            build-command: npm run tauri ios build -- --target aarch64-sim
             artifact-path: src-tauri/gen/apple/build/arm64-sim/*.app
             
           - platform: ios-simulator-x86_64
             runs-on: macos-latest
             artifact-name: iconify-simulator-x86_64.app
-            build-command: npm run tauri ios build --target x86_64
+            build-command: npm run tauri ios build -- --target x86_64
             artifact-path: src-tauri/gen/apple/build/x86_64-sim/*.app
 
     steps:
