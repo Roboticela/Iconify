@@ -258,7 +258,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
               </Button>
             </motion.div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-xl max-h-[80vh] overflow-y-auto">
+          <DropdownMenuContent align="end" className="w-[11.2rem] rounded-xl max-h-[80vh] overflow-y-auto">
             <AnimatePresence>
               {platforms.map((platform, index) => (
                 <motion.div
@@ -299,9 +299,9 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
               </Button>
             </motion.div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <AnimatePresence>
-              {themes.map((t, index) => (
+<DropdownMenuContent align="end" className="w-[9.6rem] rounded-xl max-h-[80vh] overflow-y-auto">
+          <AnimatePresence>
+            {themes.map((t, index) => (
                 <motion.div
                   key={t.name}
                   initial={{ opacity: 0, x: -10 }}
@@ -579,7 +579,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
               </motion.div>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
+          <DropdownMenuContent align="end" className="w-[9.6rem] rounded-xl max-h-[80vh] overflow-y-auto">
             {menuButtonItems.length > 0 && (
               <>
                 <AnimatePresence>
@@ -597,7 +597,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
                             <Monitor className="w-4 h-4" />
                             <span>Platform</span>
                             <DropdownMenuSub>
-                              <DropdownMenuSubContent className="w-56 rounded-xl max-h-[80vh] overflow-y-auto">
+                              <DropdownMenuSubContent className="w-[11.2rem] rounded-xl max-h-[80vh] overflow-y-auto">
                                 <AnimatePresence>
                                   {platforms.map((platform, platformIndex) => (
                                     <motion.div
@@ -637,7 +637,7 @@ export default function AppHeader({ selectedImage, onResetImage }: AppHeaderProp
                             <Palette className="w-4 h-4" />
                             <span>Theme</span>
                             <DropdownMenuSub>
-                              <DropdownMenuSubContent className="w-48 rounded-xl">
+                              <DropdownMenuSubContent className="w-[9.6rem] rounded-xl max-h-[80vh] overflow-y-auto">
                                 <AnimatePresence>
                                   {themes.map((t, themeIndex) => (
                                     <motion.div
